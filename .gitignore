@@ -1,0 +1,96 @@
+# ---- Maven ----
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Maven Wrapper
+!mvnw
+!mvnw.cmd
+!.mvn/wrapper/maven-wrapper.properties
+!.mvn/wrapper/maven-wrapper-downloader.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ---- Java ----
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ---- Test & Coverage ----
+# surefire / failsafe
+surefire-reports/
+failsafe-reports/
+# junit-platform
+.jacoco/
+jacoco.exec
+jacoco-report.html
+# other tools
+coverage/
+test-output/
+
+# ---- Static Analysis ----
+.checkstyle
+checkstyle-result.xml
+pmd.xml
+spotbugsXml.xml
+spotbugs/
+findbugs.xml
+
+# ---- IntelliJ IDEA ----
+.idea/
+*.iml
+*.iws
+out/
+
+# ---- Eclipse ----
+.project
+.classpath
+.settings/
+.factorypath
+.apt_generated/
+.apt_generated_test/
+
+# ---- NetBeans ----
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ---- VS Code ----
+.vscode/
+.history/
+
+# ---- OS / Tools ----
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+# Linux
+*~
+
+# ---- Archives / Misc ----
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# ---- Docker / Compose ----
+*.pid
+docker-data/
