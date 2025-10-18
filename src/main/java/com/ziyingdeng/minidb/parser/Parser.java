@@ -34,7 +34,7 @@ public class Parser {
         if (t.kind == TokenKind.KEYWORD) {
             return switch (t.keyword) {
                 case Create -> parseDDL();
-                // case Select -> parseSelect();
+                case Select -> parseSelect();
                 // case Insert -> parseInsert();
                 default -> throw new ParseException("[Parser] Unexpected keyword " + t);
             };
@@ -44,14 +44,8 @@ public class Parser {
 
     /* ================================ CREATE ================================= */
     private AST.Statement parseDDL() {
-        Token t1 = next(); // CREATE
-        if (!(t1.kind == TokenKind.KEYWORD && t1.keyword == Keyword.Create)) {
-            throw new ParseException("[Parser] Unexpected token " + t1);
-        }
-        Token t2 = next(); // TABLE
-        if (!(t2.kind == TokenKind.KEYWORD && t2.keyword == Keyword.Table)) {
-            throw new ParseException("[Parser] Unexpected token " + t1);
-        }
+        nextExpect(Token.keyword(Keyword.Create));
+        nextExpect(Token.keyword(Keyword.Table));
         return parseDDLCreateTable();
     }
 
@@ -142,12 +136,19 @@ public class Parser {
     }
 
     /* ================================= SELECT ============================= */
-    // private AST.Statement parseSelect() {
 
-    // }
+    // Now only support: SELECT "*" FROM ident
+    private AST.Statement parseSelect() {
+        nextExpect(Token.keyword(Keyword.Select));
+        nextExpect(Token.symbol(TokenKind.ASTERISK, "*"));
+        nextExpect(Token.keyword(Keyword.From));
+        String table = nextIdentity();
+        return new AST.Select(table);
+    }
 
     /* ================================= INSERT ============================= */
 
+    // INSERT INTO table [(col,...)] VALUES (expr,...) [, (expr,...)]*
     // private AST.Statement parseInsert() {
 
     // }

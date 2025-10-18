@@ -13,17 +13,16 @@ import com.ziyingdeng.minidb.parser.AST.Column;
 import com.ziyingdeng.minidb.parser.AST.Const;
 import com.ziyingdeng.minidb.parser.AST.CreateTable;
 import com.ziyingdeng.minidb.parser.AST.DataType;
-import com.ziyingdeng.minidb.parser.AST.Statement;
+import com.ziyingdeng.minidb.parser.AST.Select;
 
 public class ParserTest {
 
+    /* ============================ CREATE TABLE ============================ */
+
     @Test
-    void parseReturnsCreateTableStatement() {
-        Parser parser = new Parser("CREATE TABLE tbl (id INT);");
+    void parseCreateTableReturnsStatement() {
+        CreateTable create = parseCreateTable("CREATE TABLE tbl (id INT);");
 
-        Statement stmt = parser.parse();
-
-        CreateTable create = assertInstanceOf(CreateTable.class, stmt);
         assertEquals("tbl", create.name());
         Column id = create.columns().get(0);
         assertEquals("id", id.name());
@@ -32,8 +31,8 @@ public class ParserTest {
     }
 
     @Test
-    void parseHandlesColumnConstraints() {
-        Parser parser = new Parser("""
+    void parseCreateTableHandlesConstraints() {
+        CreateTable create = parseCreateTable("""
                 CREATE TABLE tbl (
                     id INT NOT NULL,
                     nickname STRING DEFAULT 'anon',
@@ -41,9 +40,7 @@ public class ParserTest {
                 );
                 """);
 
-        CreateTable create = assertInstanceOf(CreateTable.class, parser.parse());
         List<Column> columns = create.columns();
-
         Column id = columns.get(0);
         assertEquals(Boolean.FALSE, id.nullable());
 
@@ -57,30 +54,63 @@ public class ParserTest {
     }
 
     @Test
-    void parseRejectsMissingSemicolon() {
-        Parser parser = new Parser("CREATE TABLE tbl (id INT)");
-
-        assertThrows(ParseException.class, parser::parse);
+    void parseCreateTableRejectsMissingSemicolon() {
+        assertCreateTableFails("CREATE TABLE tbl (id INT)");
     }
 
     @Test
-    void parseRejectsTrailingTokens() {
-        Parser parser = new Parser("CREATE TABLE tbl (id INT); extra");
-
-        assertThrows(ParseException.class, parser::parse);
+    void parseCreateTableRejectsTrailingTokens() {
+        assertCreateTableFails("CREATE TABLE tbl (id INT); extra");
     }
 
     @Test
-    void parseRejectsNonCreateStatement() {
-        Parser parser = new Parser("SELECT * FROM tbl;");
+    void parseCreateTableRejectsMissingTableKeyword() {
+        assertCreateTableFails("CREATE tbl (id INT);");
+    }
 
-        assertThrows(ParseException.class, parser::parse);
+    /* =============================== SELECT =============================== */
+
+    @Test
+    void parseSelectReturnsStatement() {
+        Select select = parseSelect("SELECT * FROM people;");
+
+        assertEquals("people", select.tableName());
     }
 
     @Test
-    void parseRejectsMissingTableKeyword() {
-        Parser parser = new Parser("CREATE tbl (id INT);");
+    void parseSelectRejectsMissingAsterisk() {
+        assertSelectFails("SELECT name FROM people;");
+    }
 
+    @Test
+    void parseSelectRejectsMissingFromKeyword() {
+        assertSelectFails("SELECT * people;");
+    }
+
+    @Test
+    void parseSelectRejectsMissingTableName() {
+        assertSelectFails("SELECT * FROM ;");
+    }
+
+    /* =============================== Helpers ============================== */
+
+    private static CreateTable parseCreateTable(String sql) {
+        Parser parser = new Parser(sql);
+        return assertInstanceOf(CreateTable.class, parser.parse());
+    }
+
+    private static Select parseSelect(String sql) {
+        Parser parser = new Parser(sql);
+        return assertInstanceOf(Select.class, parser.parse());
+    }
+
+    private static void assertCreateTableFails(String sql) {
+        Parser parser = new Parser(sql);
+        assertThrows(ParseException.class, parser::parse);
+    }
+
+    private static void assertSelectFails(String sql) {
+        Parser parser = new Parser(sql);
         assertThrows(ParseException.class, parser::parse);
     }
 }
