@@ -47,7 +47,7 @@ public class AST {
         // Factory helpers
         public static Const ofNull()                 { return new Const(Kind.NULL, null); }
         public static Const ofBoolean(boolean v)     { return new Const(Kind.BOOLEAN, v); }
-        public static Const ofInteger(long v)        { return new Const(Kind.INTEGER, v); }
+        public static Const ofInteger(int v)        { return new Const(Kind.INTEGER, v); }
         public static Const ofFloat(double v)        { return new Const(Kind.FLOAT, v); }
         public static Const ofString(String v)       { return new Const(Kind.STRING, v); }
     }

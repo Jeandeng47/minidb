@@ -16,8 +16,8 @@ public class Lexer {
         Select, From, 
         Where, Null, Default,
         And, Or, Not, 
-        True, False, Boolean, Bool, 
-        Float, Double, Integer, Int, String, Text, Varchar,
+        True, False, 
+        Boolean, Bool, Float, Double, Integer, Int, String, Text, Varchar,
         Values, Primary, Key;
 
         private static final Map<String, Keyword> LOOKUP;
@@ -61,9 +61,9 @@ public class Lexer {
     }
 
     public static class Token {
-        private TokenKind kind;
-        private String text;        // IDENT/STRING/NUMBER/symbol
-        private Keyword keyword;    // KEYWORD
+        protected TokenKind kind;
+        protected String text;        // IDENT/STRING/NUMBER/symbol
+        protected Keyword keyword;    // KEYWORD
 
         private Token(TokenKind tk, String t, Keyword kw) { this.kind = tk; this.text = t; this.keyword = kw; }
 
