@@ -35,7 +35,7 @@ public class Parser {
             return switch (t.keyword) {
                 case Create -> parseDDL();
                 case Select -> parseSelect();
-                // case Insert -> parseInsert();
+                case Insert -> parseInsert();
                 default -> throw new ParseException("[Parser] Unexpected keyword " + t);
             };
         }
@@ -77,7 +77,7 @@ public class Parser {
             case Integer, Int  -> AST.DataType.INTEGER;
             case Float, Double -> AST.DataType.FLOAT;
             case String, Text, Varchar -> AST.DataType.STRING;
-            default -> throw new ParseException("[Parser] Unexpected keywrod " + t.keyword);
+            default -> throw new ParseException("[Parser] Unexpected keyword " + t.keyword);
         };
 
         // If unspecified in sql text, set to null initially
@@ -149,9 +149,77 @@ public class Parser {
     /* ================================= INSERT ============================= */
 
     // INSERT INTO table [(col,...)] VALUES (expr,...) [, (expr,...)]*
-    // private AST.Statement parseInsert() {
+    private AST.Statement parseInsert() {
+        nextExpect(Token.keyword(Keyword.Insert));
+        nextExpect(Token.keyword(Keyword.Into));
+        
+        String table = nextIdentity();
 
-    // }
+        // Parse list of column names
+        List<String> colNames = null;
+        if (nextIfToken(Token.symbol(TokenKind.OPEN_PAREN, "(")) != null) {
+            colNames = new ArrayList<>();
+            while (true) {
+                // continue to retrieve pair of [ col_name, "," ], until ")" is met
+                colNames.add(nextIdentity());
+                Token sep = next();
+                if (sep.equals(Token.symbol(TokenKind.CLOSE_PAREN, ")"))) break; 
+                if (sep.equals(Token.symbol(TokenKind.COMMA, ","))) continue;
+                throw new ParseException("[Parser] Unexpected token " + sep);
+            }
+        }
+
+        // Parse list of values 
+        nextExpect(Token.keyword(Keyword.Values));
+
+        // Values could be a single expression or contain nested tuples
+        List<List<AST.Expression>> rows = new ArrayList<>();
+        while (true) {
+            nextExpect(Token.symbol(TokenKind.OPEN_PAREN, "("));
+            List<AST.Expression> exprs = new ArrayList<>();
+            while (true) {
+                if (peek().equals(Token.symbol(TokenKind.OPEN_PAREN, "("))) {
+                    exprs.add(parseParenthesizedConst());
+                } else {
+                    exprs.add(parseExpression());
+                }
+                Token sep = next();
+                if (sep.equals(Token.symbol(TokenKind.CLOSE_PAREN, ")"))) break;
+                if (sep.equals(Token.symbol(TokenKind.COMMA, ","))) continue;
+                throw new ParseException("[Parser] Unexpected token " + sep);
+            }
+            rows.add(exprs);
+            if (nextIfToken(Token.symbol(TokenKind.COMMA, ",")) == null) break;
+        }
+        return new AST.Insert(table, colNames, rows);
+    }
+
+    private AST.Const parseParenthesizedConst() {
+        nextExpect(Token.symbol(TokenKind.OPEN_PAREN, "("));
+        List<String> parts = new ArrayList<>();
+        while (true) {
+            AST.Expression expr = parseExpression();
+            parts.add(expressionToString(expr));
+            Token sep = next();
+            if (sep.equals(Token.symbol(TokenKind.CLOSE_PAREN, ")"))) break;
+            if (sep.equals(Token.symbol(TokenKind.COMMA, ","))) continue;
+            throw new ParseException("[Parser] Unexpected token " + sep);
+        }
+        return AST.Const.ofString("(" + String.join(", ", parts) + ")");
+    }
+
+    private String expressionToString(AST.Expression expr) {
+        if (expr instanceof AST.Const c) {
+            return switch (c.kind) {
+                case STRING -> (String) c.value;
+                case INTEGER -> Integer.toString((Integer) c.value);
+                case FLOAT -> Double.toString((Double) c.value);
+                case BOOLEAN -> Boolean.toString((Boolean) c.value);
+                case NULL -> "NULL";
+            };
+        }
+        throw new ParseException("[Parser] Unsupported nested expression: " + expr);
+    }
 
 
     /* ================================ helpers ============================== */
